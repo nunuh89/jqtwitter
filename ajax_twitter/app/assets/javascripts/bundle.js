@@ -68,12 +68,18 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 const FollowToggle = __webpack_require__(1);
+const UsersSearch = __webpack_require__(3);
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
   const $followToggleButtonEl = $('.follow-toggle');
   $followToggleButtonEl.each(function(index, el){
     new FollowToggle(el);
+  });
+
+  const $usersSearchEl = $(".users-search");
+  $usersSearchEl.each(function(index, el) {
+    new UsersSearch(el);
   });
 
 });
@@ -113,7 +119,7 @@ class FollowToggle {
 
   handleClick() {
     this.$el.on("click", event => {
-      const $button = $(event.currentTarget);
+      // const $button = $(event.currentTarget);
       event.preventDefault();
       let submitFollowRequest;
       if (this.followState === "followed") {
@@ -136,6 +142,13 @@ class FollowToggle {
 
       const fetchError = () => {
         console.log('return failed');
+        if (this.followState === "following") {
+          this.followState = "unfollowed";
+        }
+        if (this.followState === "unfollowing") {
+          this.followState = "followed";
+        }
+        this.render();
       };
       // debugger;
 
@@ -155,7 +168,7 @@ module.exports = FollowToggle;
 const APIUtil = {
   followUser: id => {
     return $.ajax ({
-      url: `http://localhost:3000/users/${id}/follow`,
+      url: `/users/${id}/follow`,
       type: 'POST',
       dataType: 'json',
     });
@@ -163,14 +176,72 @@ const APIUtil = {
 
   unfollowUser: id => {
     return $.ajax ({
-      url: `http://localhost:3000/users/${id}/follow`,
+      url: `/users/${id}/follow`,
       type: 'DELETE',
       dataType: 'json',
+    });
+  },
+
+  searchUsers: (query, f) => {
+    return $.ajax ({
+      url: '/users/search',
+      type: 'GET',
+      dataType: 'json',
+      data: {query},
+      success: (response) => {
+        f(response);
+      }
     });
   }
 };
 
 module.exports = APIUtil;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const APIUtil = __webpack_require__(2);
+
+class UsersSearch {
+  constructor(el) {
+    this.$el = $(el);
+    this.input = this.$el.find("input");
+    this.ul = this.$el.find("ul");
+    this.handleInput();
+  }
+
+  handleInput() {
+    this.input.on("input", e => {
+      e.preventDefault();
+      const $input = $(e.currentTarget);
+      const query = $input.val();
+
+      const fetchSuccess = () => {
+        console.log('Success!');
+      };
+
+
+      APIUtil.searchUsers(query, this.renderResults.bind(this));
+    });
+
+
+  }
+
+  renderResults(resultArray){
+    console.log(resultArray);
+    this.ul.empty();
+    console.log(resultArray);
+    resultArray.forEach((el) => {
+      const $userLi = $("<li></li>");
+      $userLi.text(el.username);
+      this.ul.append($userLi);
+    });
+  }
+ }
+
+module.exports = UsersSearch;
 
 
 /***/ })

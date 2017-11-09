@@ -28,7 +28,7 @@ class FollowToggle {
 
   handleClick() {
     this.$el.on("click", event => {
-      const $button = $(event.currentTarget);
+      // const $button = $(event.currentTarget);
       event.preventDefault();
       let submitFollowRequest;
       if (this.followState === "followed") {
@@ -51,6 +51,13 @@ class FollowToggle {
 
       const fetchError = () => {
         console.log('return failed');
+        if (this.followState === "following") {
+          this.followState = "unfollowed";
+        }
+        if (this.followState === "unfollowing") {
+          this.followState = "followed";
+        }
+        this.render();
       };
       // debugger;
 
